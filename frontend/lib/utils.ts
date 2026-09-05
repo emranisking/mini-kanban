@@ -9,7 +9,9 @@ export function accentForIndex(index: number): ColumnAccent {
   return COLUMN_ACCENTS[index % COLUMN_ACCENTS.length];
 }
 
-export function initials(name: string): string {
+export function initials(name?: string | null): string {
+  if (!name) return '';
+
   return name
     .split(' ')
     .filter(Boolean)
