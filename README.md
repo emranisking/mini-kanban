@@ -27,23 +27,10 @@ sets all of that up for you automatically.
 
 ---
 
-## 2. Get the project running
+## 1. Get the project running
 
-1. **Unzip** the project folder you downloaded, and remember where you put it
-   (for example, your Desktop).
 
-2. **Open a terminal** in that folder:
-   - **Windows:** open the unzipped folder in File Explorer, then right-click
-     inside it and choose "Open in Terminal" (or hold Shift, right-click, and
-     choose "Open PowerShell window here").
-   - **Mac:** open the folder in Finder, then right-click and choose
-     "New Terminal at Folder" (or open the Terminal app and type `cd `, drag
-     the folder into the window, and press Enter).
-   - **Linux:** open your file manager, right-click the folder, and choose
-     "Open Terminal Here", or `cd` into it from a terminal you already have
-     open.
-
-3. **Create your settings file.** In that terminal, type:
+1. **Create your settings file.** In that terminal, type:
 
    ```bash
    cp .env.example .env
@@ -54,7 +41,7 @@ sets all of that up for you automatically.
    This creates a file called `.env` with sensible defaults already filled
    in — you don't need to edit anything to try the app out.
 
-4. **Start everything** by typing:
+2. **Start everything** by typing:
 
    ```bash
    docker compose up --build
@@ -68,7 +55,7 @@ sets all of that up for you automatically.
 
    Leave this terminal window open — closing it stops the app.
 
-5. **Open the app.** In your web browser, go to:
+3. **Open the app.** In your web browser, go to:
 
    ```text
    http://localhost:3000
@@ -79,7 +66,7 @@ sets all of that up for you automatically.
 
 ---
 
-## 3. Using the app
+## 2. Using the app
 
 - **Create a board** from the "Your boards" page — give it a name and,
   optionally, a description.
@@ -100,7 +87,7 @@ sets all of that up for you automatically.
 
 ---
 
-## 4. Stopping and restarting
+## 3. Stopping and restarting
 
 - To **stop** the app, go back to the terminal window and press `Ctrl + C`.
 - To **start it again later**, open a terminal in the project folder and run:
@@ -120,7 +107,7 @@ sets all of that up for you automatically.
 
 ---
 
-## 5. Troubleshooting
+## 4. Troubleshooting
 
 **"Port is already allocated" / "address already in use"**
 Something else on your computer is already using port 3000, 3001, 5432, or
@@ -142,7 +129,7 @@ Run `docker compose down -v` and then `docker compose up --build`.
 
 ---
 
-## 6. For developers
+## 5. For developers
 
 ### Tech stack
 
@@ -256,7 +243,7 @@ PATCH  /api/boards/:boardId/tasks/:taskId/move
 
 ---
 
-## 7. Design decisions
+## 6. Design decisions
 
 - **Single repository** for both frontend and backend, to keep setup to one
   `docker compose up`.
