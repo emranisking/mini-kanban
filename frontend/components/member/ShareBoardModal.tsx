@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
@@ -32,45 +30,104 @@ export function ShareBoardModal({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // GET the latest members from backend
+  async function loadMembers() {
+    try {
+      const updatedMembers = await api.boards.listMembers(boardId);
+      onMembersChanged(updatedMembers);
+    } catch (err) {
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : 'Could not load members',
+      );
+    }
+  }
+
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+
     try {
-      const member = await api.boards.addMember(boardId, { email, role });
-      onMembersChanged([...members, member]);
+      // 1. POST - add the member
+      await api.boards.addMember(boardId, {
+        email: email.trim(),
+        role,
+      });
+
+      // 2. GET - fetch the complete updated member list
+      await loadMembers();
+
+      // 3. Clear form
       setEmail('');
     } catch (err) {
-      setError(err instanceof ApiRequestError ? err.message : 'Could not add member');
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : 'Could not add member',
+      );
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  async function handleRoleChange(userId: string, newRole: BoardRole) {
+  async function handleRoleChange(
+    userId: string,
+    newRole: BoardRole,
+  ) {
+    setError(null);
+
     try {
-      const updated = await api.boards.updateMember(boardId, userId, { role: newRole });
-      onMembersChanged(members.map((m) => (m.userId === userId ? updated : m)));
+      // 1. Update role
+      await api.boards.updateMember(boardId, userId, {
+        role: newRole,
+      });
+
+      // 2. GET latest member list
+      await loadMembers();
     } catch (err) {
-      setError(err instanceof ApiRequestError ? err.message : 'Could not update role');
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : 'Could not update role',
+      );
     }
   }
 
   async function handleRemove(userId: string) {
     if (!window.confirm('Remove this person from the board?')) return;
+
+    setError(null);
+
     try {
+      // 1. Remove member
       await api.boards.removeMember(boardId, userId);
-      onMembersChanged(members.filter((m) => m.userId !== userId));
+
+      // 2. GET latest member list
+      await loadMembers();
     } catch (err) {
-      setError(err instanceof ApiRequestError ? err.message : 'Could not remove member');
+      setError(
+        err instanceof ApiRequestError
+          ? err.message
+          : 'Could not remove member',
+      );
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Share board" widthClassName="max-w-lg">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Share board"
+      widthClassName="max-w-lg"
+    >
       <div className="space-y-5">
         {isOwner && (
-          <form onSubmit={handleInvite} className="flex items-end gap-2">
+          <form
+            onSubmit={handleInvite}
+            className="flex items-end gap-2"
+          >
             <div className="flex-1">
               <Input
                 label="Invite by email"
@@ -81,21 +138,34 @@ export function ShareBoardModal({
                 placeholder="teammate@example.com"
               />
             </div>
+
             <Select
               value={role}
-              onChange={(e) => setRole(e.target.value as BoardRole)}
+              onChange={(e) =>
+                setRole(e.target.value as BoardRole)
+              }
               className="w-28"
             >
               <option value="EDITOR">Editor</option>
               <option value="VIEWER">Viewer</option>
               <option value="OWNER">Owner</option>
             </Select>
-            <Button type="submit" variant="primary" isLoading={isSubmitting}>
+
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={isSubmitting}
+            >
               Invite
             </Button>
           </form>
         )}
-        {error && <p className="text-sm text-danger">{error}</p>}
+
+        {error && (
+          <p className="text-sm text-danger">
+            {error}
+          </p>
+        )}
 
         <div className="max-h-72 space-y-1 overflow-y-auto">
           {members.map((member) => (
@@ -105,34 +175,61 @@ export function ShareBoardModal({
             >
               <div className="flex min-w-0 items-center gap-2.5">
                 <Avatar name={member.name} size={30} />
+
                 <div className="min-w-0">
                   <p className="truncate text-sm text-ink-primary">
                     {member.name}
+
                     {member.userId === currentUserId && (
-                      <span className="text-ink-tertiary"> (you)</span>
+                      <span className="text-ink-tertiary">
+                        {' '}
+                        (you)
+                      </span>
                     )}
                   </p>
-                  <p className="truncate text-xs text-ink-tertiary">{member.email}</p>
+
+                  <p className="truncate text-xs text-ink-tertiary">
+                    {member.email}
+                  </p>
                 </div>
               </div>
+
               {isOwner ? (
                 <div className="flex flex-shrink-0 items-center gap-1.5">
                   <Select
                     value={member.role}
-                    onChange={(e) => handleRoleChange(member.userId, e.target.value as BoardRole)}
+                    onChange={(e) =>
+                      handleRoleChange(
+                        member.userId,
+                        e.target.value as BoardRole,
+                      )
+                    }
                     className="h-8 w-28 text-xs"
                   >
                     <option value="OWNER">Owner</option>
                     <option value="EDITOR">Editor</option>
                     <option value="VIEWER">Viewer</option>
                   </Select>
+
                   <button
-                    onClick={() => handleRemove(member.userId)}
+                    onClick={() =>
+                      handleRemove(member.userId)
+                    }
                     className="rounded-sm p-1.5 text-ink-tertiary transition-colors hover:bg-danger/10 hover:text-danger"
                     aria-label={`Remove ${member.name}`}
                   >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                      <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                    >
+                      <path
+                        d="M4 4L12 12M12 4L4 12"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -146,3 +243,4 @@ export function ShareBoardModal({
     </Modal>
   );
 }
+
